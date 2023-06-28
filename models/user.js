@@ -20,10 +20,6 @@ const userSchema = new Schema(
       min: 6,
       max: 64,
     },
-    address: {
-      type: String,
-      trim: true,
-    },
     role: {
       type: Number,
       default: 0,
