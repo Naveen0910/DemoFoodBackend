@@ -16,7 +16,7 @@ con.on('open', () => {
 app.use(express.json());
 
 // const productRouter = require('./routes/products')
-app.use('/products', productRoutes);
+app.use('/food', productRoutes);
 
 app.listen(9000, () => {
   console.log('Server started');

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
-const productSchema = new mongoose.Schema(
+const menuSchema = new mongoose.Schema(
   {
     productId: {
       type: String,
@@ -38,10 +38,15 @@ const productSchema = new mongoose.Schema(
     photo: {
       type: String,
     },
+    venue: {
+      type: String,
+      required: true,
+    }
   },
   { timestamps: true }
 );
 
 
-export default mongoose.model("Product", productSchema);
+// export default menuSchema;
+export default mongoose.model("Menu", menuSchema);
 
