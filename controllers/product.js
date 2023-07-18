@@ -2,6 +2,7 @@ import Product from '../models/product.js';
 import Menu from '../models/menu.js'
 import { Types } from 'mongoose';
 
+import { ObjectId } from 'mongodb';
 
 export const allProducts = async(req,res) => {
   try {
@@ -19,99 +20,99 @@ export const allProducts = async(req,res) => {
   }
 }
 
-// export const getProduct = async(req, res) => {
-//     const { productId } = req.params;
-//     try {
-//       const product = await Product.findOne({ productId });
-//       if (!product) {
-//         return res.status(404).json({ message: 'Product not found' });
-//       }
-//       return res.json(product);
-//     } catch (err) {
-//       return res.status(500).json({ message: err.message });
-//     }
-// }
+export const getProduct = async(req, res) => {
+    const { productId } = req.params;
+    try {
+      const product = await Product.findOne({ productId });
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      return res.json(product);
+    } catch (err) {
+      return res.status(500).json({ message: err.message });
+    }
+}
 
 
-// export const addProduct = async (req, res) => {
-//     const newProductDetails = req.body;
-//     try {
-//       // Get the latest product ID
-//       const latestProduct = await Product.findOne({}, { productId: 1 }, { sort: { productId: -1 } });
+export const addProduct = async (req, res) => {
+    const newProductDetails = req.body;
+    try {
+      // Get the latest product ID
+      const latestProduct = await Product.findOne({}, { productId: 1 }, { sort: { productId: -1 } });
   
-//       let counter = 1;
-//       if (latestProduct) {
-//         // Extract the numeric part from the latest product ID
-//         const latestProductId = parseInt(latestProduct.productId.split('-')[1]);
-//         counter = latestProductId + 1;
-//       }
+      let counter = 1;
+      if (latestProduct) {
+        // Extract the numeric part from the latest product ID
+        const latestProductId = parseInt(latestProduct.productId.split('-')[1]);
+        counter = latestProductId + 1;
+      }
 
-//       const newProductId = `item-${counter.toString().padStart(2, '0')}`;
+      const newProductId = `item-${counter.toString().padStart(2, '0')}`;
 
-//       const newProduct = new Product({
-//         productId: newProductId,
-//         ...newProductDetails,
-//       });
+      const newProduct = new Product({
+        productId: newProductId,
+        ...newProductDetails,
+      });
   
-//       const savedProduct = await newProduct.save();
-//       if (!savedProduct) {
-//         return res.status(404).json({ message: 'Product not found' });
-//       }
-//       return res.json({
-//         msg: 'Product created successfully',
-//         savedProduct,
-//       });
-//     } catch (err) {
-//       return res.status(500).json({ message: err.message });
-//     }
-//   };
+      const savedProduct = await newProduct.save();
+      if (!savedProduct) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      return res.json({
+        msg: 'Product created successfully',
+        savedProduct,
+      });
+    } catch (err) {
+      return res.status(500).json({ message: err.message });
+    }
+  };
   
 
-// export const updateProduct = async(req,res) => {
-//     const { productId } = req.params;
-//     const updateProductDetails = req.body
-//     try{
-//         const updatedProduct = await Product.findOneAndUpdate({ productId }, { $set: updateProductDetails }, { new: true })
-//         if(!updatedProduct){
-//             return res.json({ message: 'Product not found' });
-//         }
-//         return res.json({
-//             msg: 'Updated Product Details',
-//             updatedProduct
-//         })
-//     }catch(err){
-//         res.status(500).json({ message: err.message });
-//     }
-// }
+export const updateProduct = async(req,res) => {
+    const { productId } = req.params;
+    const updateProductDetails = req.body
+    try{
+        const updatedProduct = await Product.findOneAndUpdate({ productId }, { $set: updateProductDetails }, { new: true })
+        if(!updatedProduct){
+            return res.json({ message: 'Product not found' });
+        }
+        return res.json({
+            msg: 'Updated Product Details',
+            updatedProduct
+        })
+    }catch(err){
+        res.status(500).json({ message: err.message });
+    }
+}
 
   
-// export const deleteProduct = async (req, res) => {
-//     const { productId } = req.params;
-//     try {
-//       // Delete the product
-//       const deletedProduct = await Product.findOneAndDelete({ productId: productId });
-//       if (!deletedProduct) {
-//         return res.json({ message: 'Product not found' });
-//       }
+export const deleteProduct = async (req, res) => {
+    const { productId } = req.params;
+    try {
+      // Delete the product
+      const deletedProduct = await Product.findOneAndDelete({ productId: productId });
+      if (!deletedProduct) {
+        return res.json({ message: 'Product not found' });
+      }
   
-//       // Find products with a product ID greater than the deleted product's ID
-//       const productsToUpdate = await Product.find({ productId: { $gt: productId } });
+      // Find products with a product ID greater than the deleted product's ID
+      const productsToUpdate = await Product.find({ productId: { $gt: productId } });
   
-//       // Update the product IDs for the remaining products
-//       for (const product of productsToUpdate) {
-//         const currentProductId = product.productId;
-//         const numericPart = parseInt(currentProductId.split('-')[1]) - 1;
-//         const updatedProductId = `item-${numericPart.toString().padStart(2, '0')}`;
+      // Update the product IDs for the remaining products
+      for (const product of productsToUpdate) {
+        const currentProductId = product.productId;
+        const numericPart = parseInt(currentProductId.split('-')[1]) - 1;
+        const updatedProductId = `item-${numericPart.toString().padStart(2, '0')}`;
   
-//         product.productId = updatedProductId;
-//         await product.save();
-//       }
+        product.productId = updatedProductId;
+        await product.save();
+      }
   
-//       return res.json({ message: 'Product deleted successfully' });
-//     } catch (err) {
-//       return res.status(500).json({ message: err.message });
-//     }
-//   };
+      return res.json({ message: 'Product deleted successfully' });
+    } catch (err) {
+      return res.status(500).json({ message: err.message });
+    }
+  };
   
 
 // // export const venueBasedProducts = async (req, res) => {
@@ -161,6 +162,7 @@ export const addMenu = async (req, res) => {
 
     const menuItems = newProducts.map((product) => ({
       ...product.toObject(),
+      _id: new ObjectId(),
       productId: `${product.productId.toLowerCase().replace(/\s+/g, "-")}_${venue}`,
       venue,
     }));
@@ -183,3 +185,37 @@ export const getMenu = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
       }
   }
+
+
+  export const deleteMenuItem = async (req, res) => {
+    const venue = req.params.venue;
+    const productId = req.params.productId;
+
+    try {
+      // const products = await Menu.find({ venue });
+      const deletedMenuItem = await Menu.findOneAndDelete({ productId: productId });
+      if (!deletedMenuItem) {
+          return res.json({ message: 'Product not found' });
+        }
+      res.status(200).json({ message: "Menu items deleted successfully" });
+    } catch (err) {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+export const deleteAllMenuItem = async (req, res) => {
+  const venue = req.params.venue;
+  console.log(venue)
+  // const productId = req.params.productId;
+
+  try {
+    // const products = await Menu.find({ venue });
+    const deletedAllMenuItem = await Menu.deleteMany({ venue });
+    if (!deletedAllMenuItem) {
+        return res.json({ message: 'Product not found' });
+      }
+    res.status(200).json({ message: "Menu items deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}

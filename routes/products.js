@@ -3,14 +3,16 @@ const router = express.Router();
 
 import {
     allProducts,
-    // getProduct,
-    // addProduct,
-    // updateProduct,
-    // deleteProduct,
+    getProduct,
+    addProduct,
+    updateProduct,
+    deleteProduct,
     // venueBasedProducts,
     // searchProductByName,
     addMenu,
     getMenu,
+    deleteMenuItem,
+    deleteAllMenuItem,
 } from "../controllers/product.js"
 
 // router.get('/',allProducts)
@@ -21,7 +23,17 @@ import {
 // // router.get('/venue/:venue',venueBasedProducts)
 // router.get('/search/:key', searchProductByName)
 
-router.get('/:venue',allProducts)
-router.post("/:venue/addtomenu", addMenu)
+//For all products
+router.get('/:venue/products',allProducts)
+router.get('/:venue/products/:productId',getProduct)
+router.post('/:venue/products',addProduct)
+router.patch('/:venue/products/:productId',updateProduct)
+router.delete('/:venue/products/:productId',deleteProduct)
+
+//For Menu list
+router.post("/:venue/products/addtomenu", addMenu)
 router.get('/:venue/menu',getMenu)
+router.delete('/:venue/menu/:productId',deleteMenuItem)
+router.delete('/:venue/menu/delete/AllItems',deleteAllMenuItem)
+
 export default router;
