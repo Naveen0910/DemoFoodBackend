@@ -1,23 +1,42 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import productRoutes from './routes/products.js';
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import morgan from "morgan";
 
-const url = 'mongodb://localhost/FS2';
+import productRoutes from "./routes/products.js";
 
+dotenv.config(); // To load env variables from .env file
 const app = express();
+app.use(morgan("dev")); // this logs the route that we hit
 
-mongoose.connect(url, { useNewUrlParser: true });
-const con = mongoose.connection;
+// Connection with Database using LocalHost -- Lokesh
 
-con.on('open', () => {
-  console.log('connected...');
-});
+// const url = 'mongodb://localhost/FS2';
+
+// mongoose.connect(url, { useNewUrlParser: true });
+// const con = mongoose.connection;
+
+// con.on('open', () => {
+//   console.log('connected...');
+// });
 
 app.use(express.json());
+app.use("/food", productRoutes);
 
-// const productRouter = require('./routes/products')
-app.use('/food', productRoutes);
+// app.listen(9000, () => {
+//   console.log("Server started");
+// });
 
-app.listen(9000, () => {
-  console.log('Server started');
-});
+// Connection with Database using MongoAtlas -- Naveen
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    app.listen(process.env.PORT, () => {
+      console.log(
+        `Server Started at PORT - ${process.env.PORT}, Connection to Database Done`
+      );
+    });
+  })
+  .catch((error) => {
+    console.log(`Error Connecting to Database : ${error}`);
+  });
