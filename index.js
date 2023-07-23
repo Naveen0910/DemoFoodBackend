@@ -2,13 +2,13 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import morgan from "morgan";
-
+import cors from "cors";
 import productRoutes from "./routes/products.js";
 
 dotenv.config(); // To load env variables from .env file
 const app = express();
 app.use(morgan("dev")); // this logs the route that we hit
-
+app.use(cors());
 // Connection with Database using LocalHost -- Lokesh
 
 // const url = 'mongodb://localhost/FS2';
