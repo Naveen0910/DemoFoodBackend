@@ -35,10 +35,11 @@ export const getMyOrders = async (req, res) => {
 // Route GET /api/orders/:id
 // access User
 export const getOrderById = async (req, res) => {
-  const order = await Order.findById(req.params.id).populate(
-    "user",
-    "name mobileNumber"
-  );
+  const order = await Order.findById(req.params.id);
+  // .populate(
+  //   "user",
+  //   "name mobileNumber"
+  // ); use this once Login Functionality is Done
   if (order) {
     res.status(200).json(order);
   } else {
@@ -54,15 +55,25 @@ export const updateOrderToPaid = async (req, res) => {
 };
 
 // Updating Order to Delivered
-// PUT /api/orders/:id/delivered
+// PUT /api/orders/:id/deliver
 // Access to Admin or Chef
 export const updateOrderToDelivered = async (req, res) => {
-  res.send("Update Order to Delivered");
+  const order = await Order.findById(req.params.id);
+  if (order) {
+    order.isDelivered = true;
+    order.deliveredAt = Date.now();
+    const updatedOrder = await order.save();
+
+    res.status(200).json(updatedOrder);
+  } else {
+    res.status(404);
+  }
 };
 
 // Updatind Order To Delivered
 // Route GET /api/orders
 // Access Admin or Chef
 export const getOrders = async (req, res) => {
-  res.send("Orders of all Users to Chef or Admin");
+  const orders = await Order.find();
+  res.status(200).json(orders);
 };
