@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
 import productRoutes from "./routes/products.js";
+import orderRoutes from "./routes/order.js";
 
 dotenv.config(); // To load env variables from .env file
 const app = express();
@@ -22,6 +23,7 @@ app.use(cors());
 
 app.use(express.json());
 app.use("/food", productRoutes);
+app.use("/api/orders", orderRoutes);
 
 // app.listen(9000, () => {
 //   console.log("Server started");
