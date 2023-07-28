@@ -51,7 +51,15 @@ export const getOrderById = async (req, res) => {
 // Route PUT /api/Orders/:id/pay
 // acess Admin or chef
 export const updateOrderToPaid = async (req, res) => {
-  res.send("Update order to Paid");
+  const order = await Order.findById(req.params.id);
+  if (order) {
+    order.isPaid = true;
+    order.paidAt = Date.now();
+    const updatedOrder = await order.save();
+    res.status(200).json(updatedOrder);
+  } else {
+    res.status(404);
+  }
 };
 
 // Updating Order to Delivered
