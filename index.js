@@ -8,11 +8,13 @@ import productRoutes from "./routes/products.js";
 import orderRoutes from "./routes/order.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import sseRoutes from "./routes/sseRoute.js";
+import compression from "compression";
 
 dotenv.config(); // To load env variables from .env file
 const app = express();
 app.use(morgan("dev")); // this logs the route that we hit
 app.use(cors());
+app.use(compression());
 // Connection with Database using LocalHost -- Lokesh
 
 // const url = 'mongodb://localhost/FS2';

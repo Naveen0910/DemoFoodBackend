@@ -1,11 +1,12 @@
 import Order from "../models/OrderModel.js";
+import { sse } from "../routes/sseRoute.js";
 
 // Create new Order
 // Route POST /api/orders
 // Access only for Admin nd Chef
 export const addOrderItems = async (req, res) => {
   const { orderItems, totalPrice } = req.body;
-  console.log(orderItems);
+
   if (orderItems && orderItems.length === 0) {
     res.status(400).json({ error: "No Order Items" });
   } else {
@@ -19,6 +20,7 @@ export const addOrderItems = async (req, res) => {
       totalPrice,
     });
     const createdOrder = await order.save();
+    sse.send(createdOrder, "newOrder");
     res.status(201).json(createdOrder);
   }
 };

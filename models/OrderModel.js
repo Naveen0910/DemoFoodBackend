@@ -40,6 +40,10 @@ const orderSchema = new mongoose.Schema(
     deliveredAt: {
       type: Date,
     },
+    orderStatus: {
+      type: String,
+      default: "preparing",
+    },
   },
   { timestamps: true }
 );
