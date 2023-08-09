@@ -13,6 +13,7 @@ import {
   getMenu,
   deleteMenuItem,
   deleteAllMenuItem,
+  getProductImage,
 } from "../controllers/product.js";
 
 // router.get('/',allProducts)
@@ -25,11 +26,12 @@ import {
 
 //For all products
 router.get("/:venue/products", allProducts);
+
 router.get("/:venue/products/:productId", getProduct);
 router.post("/:venue/products", addProduct);
 router.patch("/:venue/products/:productId", updateProduct);
 router.delete("/:venue/products/:productId", deleteProduct);
-
+router.get("/products/:fileName", getProductImage);
 //For Menu list
 router.post("/:venue/products/addtomenu", addMenu);
 router.get("/:venue/menu", getMenu);

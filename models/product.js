@@ -38,10 +38,11 @@ const productSchema = new mongoose.Schema(
     photo: {
       type: String,
     },
+    imageUrl: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
 
-
 export default mongoose.model("Product", productSchema);
-

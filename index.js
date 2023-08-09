@@ -1,3 +1,4 @@
+import path from "path";
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -5,6 +6,8 @@ import morgan from "morgan";
 import cors from "cors";
 import productRoutes from "./routes/products.js";
 import orderRoutes from "./routes/order.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
+import sseRoutes from "./routes/sseRoute.js";
 
 dotenv.config(); // To load env variables from .env file
 const app = express();
@@ -24,6 +27,11 @@ app.use(cors());
 app.use(express.json());
 app.use("/food", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use(sseRoutes);
+
+const __dirname = path.resolve();
+app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 
 // app.listen(9000, () => {
 //   console.log("Server started");

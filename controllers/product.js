@@ -1,6 +1,9 @@
+import path from "path";
 import Product from "../models/product.js";
 import Menu from "../models/menu.js";
-import { Types } from "mongoose";
+import { promises as fs } from "fs";
+import { fileURLToPath } from "url";
+import { sse } from "../routes/sseRoute.js";
 
 import { ObjectId } from "mongodb";
 
@@ -34,6 +37,20 @@ export const getProduct = async (req, res) => {
   }
 };
 
+export const getProductImage = async (req, res) => {
+  const { fileName } = req.params;
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  try {
+    const imagePath = path.join(__dirname, "../uploads/public", fileName);
+    const imageBuffer = await fs.readFile(imagePath);
+    res.send(imageBuffer);
+  } catch (err) {
+    console.error("Error reading file:", err);
+    res.status(500).json({ error: err });
+  }
+};
+
 export const addProduct = async (req, res) => {
   const newProductDetails = req.body;
   try {
@@ -46,7 +63,6 @@ export const addProduct = async (req, res) => {
 
     let counter = 1;
     if (latestProduct) {
-      // Extract the numeric part from the latest product ID
       const latestProductId = parseInt(latestProduct.productId.split("-")[1]);
       counter = latestProductId + 1;
     }
@@ -62,6 +78,7 @@ export const addProduct = async (req, res) => {
     if (!savedProduct) {
       return res.status(404).json({ message: "Product not found" });
     }
+    sse.send(savedProduct, "newProduct");
     return res.json({
       msg: "Product created successfully",
       savedProduct,
@@ -96,13 +113,14 @@ export const deleteProduct = async (req, res) => {
   const { productId } = req.params;
   try {
     // Delete the product
+
     const deletedProduct = await Product.findOneAndDelete({
       productId: productId,
     });
+
     if (!deletedProduct) {
       return res.json({ message: "Product not found" });
     }
-
     // Find products with a product ID greater than the deleted product's ID
     const productsToUpdate = await Product.find({
       productId: { $gt: productId },
@@ -119,6 +137,7 @@ export const deleteProduct = async (req, res) => {
       product.productId = updatedProductId;
       await product.save();
     }
+    sse.send(deletedProduct, "productDeleted");
 
     return res.json({ message: "Product deleted successfully" });
   } catch (err) {
