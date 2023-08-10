@@ -1,27 +1,82 @@
 import Order from "../models/OrderModel.js";
+import { format, isSameDay } from "date-fns";
 import { sse } from "../routes/sseRoute.js";
 
 // Create new Order
 // Route POST /api/orders
 // Access only for Admin nd Chef
+// export const addOrderItems = async (req, res) => {
+//   const { orderItems, totalPrice } = req.body;
+//   console.log(orderItems);
+//   if (orderItems && orderItems.length === 0) {
+//     res.status(400).json({ error: "No Order Items" });
+//   } else {
+//     const order = new Order({
+//       orderItems: orderItems.map((x) => ({
+//         ...x,
+//         product: x._id,
+//         _id: undefined,
+//       })),
+//       // user: req.user._id, implement this once login is Done
+//       totalPrice,
+//     });
+//     const createdOrder = await order.save();
+//     res.status(201).json(createdOrder);
+//   }
+// };
+
+// Helper function to get the count of orders for a specific date
+const getOrderCountForDate = async (date) => {
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const count = await Order.countDocuments({
+    createdAt: {
+      $gte: startOfDay,
+      $lte: endOfDay,
+    },
+  });
+
+  return count;
+};
+
 export const addOrderItems = async (req, res) => {
   const { orderItems, totalPrice } = req.body;
-
-  if (orderItems && orderItems.length === 0) {
+  console.log(orderItems);
+  if (!orderItems || orderItems.length === 0) {
     res.status(400).json({ error: "No Order Items" });
-  } else {
+    return;
+  }
+  try {
+    // Get the current date and format it as "dd-MM-yyyy"
+    const currentDate = new Date();
+    const formattedDate = format(currentDate, "dd-MM-yyyy");
+
+    // Get the count of orders for the current date
+    const orderCount = await getOrderCountForDate(currentDate);
+
+    // Generate the orderId based on the current date and orderCount
+    const orderId = `${formattedDate}_order${orderCount + 1}`;
+
     const order = new Order({
       orderItems: orderItems.map((x) => ({
         ...x,
         product: x._id,
         _id: undefined,
       })),
-      // user: req.user._id, implement this once login is Done
       totalPrice,
+      orderId, // Assign the generated orderId to the order
     });
+
     const createdOrder = await order.save();
+    console.log(createdOrder);
     sse.send(createdOrder, "newOrder");
     res.status(201).json(createdOrder);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: err.message });
   }
 };
 

@@ -24,6 +24,9 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    orderId: {
+      type: String,
+    },
     isPaid: {
       type: Boolean,
       required: true,
