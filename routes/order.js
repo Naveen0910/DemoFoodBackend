@@ -7,6 +7,8 @@ import {
   updateOrderToDelivered,
   updateOrderToPaid,
   getAllOrdersForAdmin,
+  updateOrderToPreparing,
+  Delivered,
 } from "../controllers/order.js";
 
 const router = express.Router();
@@ -24,5 +26,10 @@ router.put(
   "/:id/deliver",
   /* ProtectedRouteMiddleware , AdminRouteMiddleware ,*/ updateOrderToDelivered
 );
+router.put(
+  "/:orderId/updateToPreparing",
+  /* Chef middleware */ updateOrderToPreparing
+);
+router.put("/:orderId/updateToDelivered", Delivered);
 
 export default router;

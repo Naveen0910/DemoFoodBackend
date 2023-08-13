@@ -135,6 +135,47 @@ export const updateOrderToDelivered = async (req, res) => {
   }
 };
 
+// Update Order to Preparing
+// Route post /api/order
+// Access admin or chef
+export const updateOrderToPreparing = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { orderStatus: "preparing" },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(updatedOrder);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const Delivered = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { orderStatus: "delivered" },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(updatedOrder);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Updatind Order To Delivered
 // Route GET /api/orders
 // Access Admin or Chef

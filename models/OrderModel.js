@@ -45,7 +45,7 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      default: "preparing",
+      default: "justPlaced",
     },
   },
   { timestamps: true }
