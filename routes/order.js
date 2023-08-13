@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.post("/", /* ProtectedRouteMiddleware ,*/ addOrderItems);
 router.get(
-  "/",
+  "/:date",
   /* ProtectedRouteMiddleware , AdminRouteMiddleware ,*/ getOrders
 );
 router.get("/myOrders", /* ProtectedRouteMiddleware ,*/ getMyOrders);

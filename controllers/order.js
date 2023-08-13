@@ -1,5 +1,5 @@
 import Order from "../models/OrderModel.js";
-import { format, isSameDay } from "date-fns";
+import { format, startOfDay, parseISO, endOfDay } from "date-fns";
 import { sse } from "../routes/sseRoute.js";
 
 // Create new Order
@@ -139,6 +139,34 @@ export const updateOrderToDelivered = async (req, res) => {
 // Route GET /api/orders
 // Access Admin or Chef
 export const getOrders = async (req, res) => {
-  const orders = await Order.find();
-  res.status(200).json(orders);
+  try {
+    const urlEncodedDate = req.params.date;
+    const decodedDate = decodeURIComponent(urlEncodedDate);
+
+    // Creating a new Date object from the decoded string
+    const dateObject = new Date(decodedDate);
+
+    // Converting to ISO string
+    const isoDateString = dateObject.toISOString();
+
+    // Construct a date range for the query
+    const startOfDay = new Date(dateObject);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(dateObject);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Find orders placed on the similar date
+    const orders = await Order.find({
+      createdAt: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+    });
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
 };

@@ -252,3 +252,34 @@ export const deleteAllMenuItem = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+/* Review Products Controller */
+export const createProductReview = async (req, res) => {
+  const { name, rating, comment } = req.body;
+  const { productId } = req.params;
+
+  console.log(name, rating, comment, productId);
+
+  try {
+    const product = await Product.findOne({ productId: productId });
+    if (product) {
+      const review = {
+        name,
+        comment,
+        rating: Number(rating),
+      };
+      product.reviews.push(review);
+      product.numReviews = product.reviews.length;
+      product.rating =
+        product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+        product.reviews.length;
+      const newReview = await product.save();
+      res.status(201).json({ message: "Review Added" });
+    } else {
+      res.status(404).json({ message: "Product Not Found" });
+    }
+  } catch (err) {
+    console.log({ error: err });
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

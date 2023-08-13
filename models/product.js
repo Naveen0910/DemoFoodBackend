@@ -1,6 +1,16 @@
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
+const reviewSchema = mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    comment: { type: String, required: true },
+    rating: { type: Number, required: true },
+    /* Need to add user ref */
+  },
+  { timestamps: true }
+);
+
 const productSchema = new mongoose.Schema(
   {
     productId: {
@@ -18,6 +28,17 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       maxlength: 2000,
+    },
+    reviews: [reviewSchema],
+    rating: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    numReviews: {
+      type: Number,
+      required: true,
+      default: 0,
     },
     price: {
       type: Number,

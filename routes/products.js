@@ -14,6 +14,7 @@ import {
   deleteMenuItem,
   deleteAllMenuItem,
   getProductImage,
+  createProductReview,
 } from "../controllers/product.js";
 
 // router.get('/',allProducts)
@@ -37,5 +38,6 @@ router.post("/:venue/products/addtomenu", addMenu);
 router.get("/:venue/menu", getMenu);
 router.delete("/:venue/menu/:productId", deleteMenuItem);
 router.delete("/:venue/menu/delete/AllItems", deleteAllMenuItem);
-
+//Reviews
+router.post("/:venue/products/review/:productId", createProductReview);
 export default router;
