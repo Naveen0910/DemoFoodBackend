@@ -150,7 +150,7 @@ export const getOrders = async (req, res) => {
     const isoDateString = dateObject.toISOString();
 
     // Construct a date range for the query
-    const startOfDay = new Date(dateObject);
+    const startOfDay = new Date(isoDateString);
     startOfDay.setUTCHours(0, 0, 0, 0);
 
     const endOfDay = new Date(dateObject);
@@ -163,10 +163,18 @@ export const getOrders = async (req, res) => {
         $lte: endOfDay,
       },
     });
-
-    res.status(200).json(orders);
+    if (orders) res.status(200).json(orders);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getAllOrdersForAdmin = async (req, res) => {
+  try {
+    const orders = await Order.find();
+    res.status(200).json(orders);
+  } catch (er) {
+    res.status(500).json({ message: er });
   }
 };
