@@ -9,14 +9,10 @@ import { ObjectId } from "mongodb";
 
 export const allProducts = async (req, res) => {
   try {
-    const { item } = req.query;
-    const queryObject = {};
-
-    if (item) {
-      queryObject.item = { $regex: item, $options: "i" };
-    }
-
-    const products = await Product.find(queryObject);
+    const keyword = req.query.keyword
+      ? { item: { $regex: req.query.keyword, $options: "i" } }
+      : {};
+    const products = await Product.find({ ...keyword });
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: err.message });
