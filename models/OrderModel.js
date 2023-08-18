@@ -47,6 +47,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "justPlaced",
     },
+    phoneNumber: {
+      type: Number,
+      required: true,
+    },
   },
   { timestamps: true }
 );

@@ -43,7 +43,7 @@ const getOrderCountForDate = async (date) => {
 };
 
 export const addOrderItems = async (req, res) => {
-  const { orderItems, totalPrice } = req.body;
+  const { orderItems, totalPrice, phoneNumber } = req.body;
   console.log(orderItems);
   if (!orderItems || orderItems.length === 0) {
     res.status(400).json({ error: "No Order Items" });
@@ -68,6 +68,7 @@ export const addOrderItems = async (req, res) => {
       })),
       totalPrice,
       orderId, // Assign the generated orderId to the order
+      phoneNumber,
     });
 
     const createdOrder = await order.save();
