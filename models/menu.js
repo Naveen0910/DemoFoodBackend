@@ -41,12 +41,14 @@ const menuSchema = new mongoose.Schema(
     venue: {
       type: String,
       required: true,
-    }
+    },
+    plates: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
-
 // export default menuSchema;
 export default mongoose.model("Menu", menuSchema);
-

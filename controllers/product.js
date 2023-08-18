@@ -33,20 +33,6 @@ export const getProduct = async (req, res) => {
   }
 };
 
-export const getProductImage = async (req, res) => {
-  const { fileName } = req.params;
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  try {
-    const imagePath = path.join(__dirname, "../uploads/public", fileName);
-    const imageBuffer = await fs.readFile(imagePath);
-    res.send(imageBuffer);
-  } catch (err) {
-    console.error("Error reading file:", err);
-    res.status(500).json({ error: err });
-  }
-};
-
 export const addProduct = async (req, res) => {
   const newProductDetails = req.body;
   try {
@@ -169,48 +155,87 @@ export const deleteProduct = async (req, res) => {
 
 export const addMenu = async (req, res) => {
   const { venue } = req.params;
-  const { productIds } = req.body;
-
+  const menuItemsToAdd = req.body; // An array of { productId, plate } objects
+  console.log(menuItemsToAdd);
   try {
     const existingProductIds = await Menu.distinct("productId");
+    const newMenuItems = [];
+    const processedProductIds = new Set(); // To keep track of processed productIds
 
-    const newProductIds = productIds.filter(
-      (productId) => !existingProductIds.includes(productId)
-    );
+    for (const item of menuItemsToAdd) {
+      const { productId, plates } = item;
 
-    if (newProductIds.length === 0) {
-      return res.status(200).json({ message: "No new products to add" });
+      const processedProductId = `${productId
+        .toLowerCase()
+        .replace(/\s+/g, "-")}_${venue}`;
+
+      // Skip if this processedProductId has been processed before
+      if (processedProductIds.has(processedProductId)) {
+        continue;
+      }
+
+      if (existingProductIds.includes(processedProductId)) {
+        // Product already exists in the menu, update its plates
+        await Menu.updateOne(
+          { productId: processedProductId },
+          { $set: { plates: plates } }
+        );
+      } else {
+        // Product doesn't exist in the menu, try to find it in Products
+        const newProduct = await Product.findOne({ productId });
+
+        if (newProduct) {
+          const newMenuItem = {
+            ...newProduct.toObject(),
+            _id: new ObjectId(),
+            productId: processedProductId,
+            venue,
+            plates: plates,
+          };
+
+          newMenuItems.push(newMenuItem);
+          processedProductIds.add(processedProductId); // Mark as processed
+        }
+      }
     }
 
-    const newProducts = await Product.find({
-      productId: { $in: newProductIds },
-    });
+    // Insert new menu items
+    if (newMenuItems.length > 0) {
+      await Menu.insertMany(newMenuItems);
+    }
 
-    const menuItems = newProducts.map((product) => ({
-      ...product.toObject(),
-      _id: new ObjectId(),
-      productId: `${product.productId
-        .toLowerCase()
-        .replace(/\s+/g, "-")}_${venue}`,
-      venue,
-    }));
-
-    await Menu.insertMany(menuItems);
-
-    res.status(200).json({ message: "Menu items added successfully" });
+    res.status(200).json({ message: "Menu items added/updated successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
+export const getMenuItem = async (req, res) => {
+  const { productId, venue } = req.params;
+  console.log(productId);
+  try {
+    const product = await Menu.findOne({ productId });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    return res.json(product);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 export const getMenu = async (req, res) => {
   const { venue } = req.params;
+  console.log(req.query);
   try {
-    const products = await Menu.find({ venue });
+    const keyword = req.query.keyword
+      ? { item: { $regex: req.query.keyword, $options: "i" } }
+      : {};
+    const products = await Menu.find({ ...keyword });
     res.json(products);
   } catch (err) {
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -277,5 +302,20 @@ export const createProductReview = async (req, res) => {
   } catch (err) {
     console.log({ error: err });
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/* Get Product Image  */
+export const getProductImage = async (req, res) => {
+  const { fileName } = req.params;
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  try {
+    const imagePath = path.join(__dirname, "../uploads/public", fileName);
+    const imageBuffer = await fs.readFile(imagePath);
+    res.send(imageBuffer);
+  } catch (err) {
+    console.error("Error reading file:", err);
+    res.status(500).json({ error: err });
   }
 };
