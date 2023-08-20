@@ -24,8 +24,18 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    phoneNumber: {
+      type: String,
+      required: true,
+    },
     orderId: {
       type: String,
+      unique: true,
+      required: true,
+    },
+    venue: {
+      type: String,
+      required: true,
     },
     isPaid: {
       type: Boolean,
@@ -46,10 +56,6 @@ const orderSchema = new mongoose.Schema(
     orderStatus: {
       type: String,
       default: "justPlaced",
-    },
-    phoneNumber: {
-      type: Number,
-      required: true,
     },
   },
   { timestamps: true }

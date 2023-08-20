@@ -9,27 +9,39 @@ import {
   getAllOrdersForAdmin,
   updateOrderToPreparing,
   Delivered,
+  ItemsQty,
 } from "../controllers/order.js";
 
 const router = express.Router();
 
-router.post("/", /* ProtectedRouteMiddleware ,*/ addOrderItems);
+router.post("/:venue", /* ProtectedRouteMiddleware ,*/ addOrderItems);
 router.get(
-  "/:date",
+  "/:venue/date/:date",
   /* ProtectedRouteMiddleware , AdminRouteMiddleware ,*/ getOrders
 );
-router.get("/", getAllOrdersForAdmin);
-router.get("/myOrders", /* ProtectedRouteMiddleware ,*/ getMyOrders);
-router.get("/:id", /* ProtectedRouteMiddleware  ,*/ getOrderById);
-router.put("/:id/pay", /* ProtectedRouteMiddleware ,*/ updateOrderToPaid);
+router.get("/:venue/allOrders", getAllOrdersForAdmin);
+router.get("/:venue/myOrders", /* ProtectedRouteMiddleware ,*/ getMyOrders);
+router.get(
+  "/:venue/Order/:orderId",
+  /* ProtectedRouteMiddleware  ,*/ getOrderById
+);
 router.put(
-  "/:id/deliver",
+  "/:venue/pay/:orderId",
+  /* ProtectedRouteMiddleware ,*/ updateOrderToPaid
+);
+router.put(
+  "/:venue/deliver/:orderId",
   /* ProtectedRouteMiddleware , AdminRouteMiddleware ,*/ updateOrderToDelivered
 );
 router.put(
-  "/:orderId/updateToPreparing",
+  "/:venue/updateToPreparing/:orderId",
   /* Chef middleware */ updateOrderToPreparing
 );
-router.put("/:orderId/updateToDelivered", Delivered);
+
+router.put("/:venue/updateToDelivered/:orderId", Delivered);
+
+/* New Routes */
+
+router.get("/:venue/items-qty", ItemsQty);
 
 export default router;

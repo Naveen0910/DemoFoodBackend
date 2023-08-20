@@ -1,4 +1,5 @@
 import Order from "../models/OrderModel.js";
+import Menu from "../models/menu.js";
 import { format, startOfDay, parseISO, endOfDay } from "date-fns";
 import { sse } from "../routes/sseRoute.js";
 
@@ -25,24 +26,8 @@ import { sse } from "../routes/sseRoute.js";
 //   }
 // };
 
-// Helper function to get the count of orders for a specific date
-const getOrderCountForDate = async (date) => {
-  const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
-
-  const count = await Order.countDocuments({
-    createdAt: {
-      $gte: startOfDay,
-      $lte: endOfDay,
-    },
-  });
-
-  return count;
-};
-
 export const addOrderItems = async (req, res) => {
+  const { venue } = req.params;
   const { orderItems, totalPrice, phoneNumber } = req.body;
   console.log(orderItems);
   if (!orderItems || orderItems.length === 0) {
@@ -55,10 +40,20 @@ export const addOrderItems = async (req, res) => {
     const formattedDate = format(currentDate, "dd-MM-yyyy");
 
     // Get the count of orders for the current date
-    const orderCount = await getOrderCountForDate(currentDate);
+    const getOrderCountForDateAndVenue = async (date, venue) => {
+      const orderCount = await Order.countDocuments({
+        venue: venue,
+        createdAt: {
+          $gte: new Date(date.setHours(0, 0, 0, 0)),
+          $lt: new Date(date.setHours(23, 59, 59, 999)),
+        },
+      });
+      return orderCount;
+    };
+    const orderCount = await getOrderCountForDateAndVenue(currentDate, venue);
 
     // Generate the orderId based on the current date and orderCount
-    const orderId = `${formattedDate}_order${orderCount + 1}`;
+    const orderId = `${formattedDate}_${venue}_order${orderCount + 1}`;
 
     const order = new Order({
       orderItems: orderItems.map((x) => ({
@@ -67,8 +62,9 @@ export const addOrderItems = async (req, res) => {
         _id: undefined,
       })),
       totalPrice,
-      orderId, // Assign the generated orderId to the order
+      orderId,
       phoneNumber,
+      venue,
     });
 
     const createdOrder = await order.save();
@@ -81,101 +77,80 @@ export const addOrderItems = async (req, res) => {
   }
 };
 
-// Getting logged in User all Orders
-// Route GET /api/orders/myorders
-// Access only for user
-export const getMyOrders = async (req, res) => {
-  const orders = await Order.find({ user: req.user._id });
-  res.status(200).json(orders);
-};
+// export const addOrderItems = async (req, res) => {
+//   const { venue } = req.params;
+//   const { orderItems, totalPrice, phoneNumber } = req.body;
+//   console.log(orderItems, totalPrice);
+//   if (!orderItems || orderItems.length === 0) {
+//     res.status(400).json({ error: "No Order Items" });
+//     return;
+//   }
 
-// Getting Loggedin User Specific Order
-// Route GET /api/orders/:id
-// access User
-export const getOrderById = async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  // .populate(
-  //   "user",
-  //   "name mobileNumber"
-  // ); use this once Login Functionality is Done
-  if (order) {
-    res.status(200).json(order);
-  } else {
-    res.status(404).json({ error: "Order Not Found" });
-  }
-};
+//   try {
+//     // Get the current date and format it as "dd-MM-yyyy"
+//     const currentDate = new Date();
+//     const formattedDate = format(currentDate, "dd-MM-yyyy");
 
-// Updating Order (info Like Amount Paid)
-// Route PUT /api/Orders/:id/pay
-// acess Admin or chef
-export const updateOrderToPaid = async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (order) {
-    order.isPaid = true;
-    order.paidAt = Date.now();
-    const updatedOrder = await order.save();
-    res.status(200).json(updatedOrder);
-  } else {
-    res.status(404);
-  }
-};
+//     // Get the count of orders for the current date and venue
+//     const getOrderCountForDateAndVenue = async (date, venue) => {
+//       const orderCount = await Order.countDocuments({
+//         venue: venue,
+//         createdAt: {
+//           $gte: new Date(date.setHours(0, 0, 0, 0)),
+//           $lt: new Date(date.setHours(23, 59, 59, 999)),
+//         },
+//       });
+//       return orderCount;
+//     };
+//     const orderCount = await getOrderCountForDateAndVenue(currentDate, venue);
 
-// Updating Order to Delivered
-// PUT /api/orders/:id/deliver
-// Access to Admin or Chef
-export const updateOrderToDelivered = async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (order) {
-    order.isDelivered = true;
-    order.deliveredAt = Date.now();
-    const updatedOrder = await order.save();
+//     // Generate the orderId based on the current date and orderCount
+//     const orderId = `${formattedDate}_${venue}_order${orderCount + 1}`;
 
-    res.status(200).json(updatedOrder);
-  } else {
-    res.status(404);
-  }
-};
+//     // Fetch menu items based on the product IDs in the order
+//     const menuItems = await Menu.find({
+//       productId: { $in: orderItems.map((item) => item.productId) },
+//       venue: venue,
+//     });
 
-// Update Order to Preparing
-// Route post /api/order
-// Access admin or chef
-export const updateOrderToPreparing = async (req, res) => {
-  try {
-    const orderId = req.params.orderId;
-    const updatedOrder = await Order.findByIdAndUpdate(
-      orderId,
-      { orderStatus: "preparing" },
-      { new: true }
-    );
+//     if (!menuItems || menuItems.length === 0) {
+//       res.status(400).json({ error: "No Items Menu" });
+//       return;
+//     }
+//     // Populate the orderItems array with menu item details
+//     const populatedOrderItems = orderItems.map((item) => {
+//       const menuItem = menuItems.find(
+//         (menuItem) => menuItem.productId === item.productId
+//       );
+//       return {
+//         item: menuItem.item,
+//         qty: item.qty,
+//         price: menuItem.price,
+//         photo: menuItem.photo,
+//         productId: item.productId,
+//       };
+//     });
 
-    if (!updatedOrder) {
-      return res.status(404).json({ message: "Order not found" });
-    }
+//     const totalPrice = populatedOrderItems.reduce((total, item) => {
+//       return total + item.qty * item.price;
+//     }, 0);
 
-    res.json(updatedOrder);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+//     const order = new Order({
+//       orderItems: populatedOrderItems,
+//       totalPrice,
+//       orderId,
+//       phoneNumber,
+//       venue,
+//     });
 
-export const Delivered = async (req, res) => {
-  try {
-    const orderId = req.params.orderId;
-    const updatedOrder = await Order.findByIdAndUpdate(
-      orderId,
-      { orderStatus: "delivered" },
-      { new: true }
-    );
-
-    if (!updatedOrder) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    res.json(updatedOrder);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+//     const createdOrder = await order.save();
+//     console.log(createdOrder);
+//     sse.send(createdOrder, "newOrder");
+//     res.status(201).json(createdOrder);
+//   } catch (error) {
+//     res.status(500).json({ error: "Internal Server Error " + error });
+//   }
+// };
 
 // Updatind Order To Delivered
 // Route GET /api/orders
@@ -183,6 +158,9 @@ export const Delivered = async (req, res) => {
 export const getOrders = async (req, res) => {
   try {
     const urlEncodedDate = req.params.date;
+    const venue = req.params.venue;
+    console.log(venue);
+    console.log(urlEncodedDate);
     const decodedDate = decodeURIComponent(urlEncodedDate);
 
     // Creating a new Date object from the decoded string
@@ -199,11 +177,13 @@ export const getOrders = async (req, res) => {
     endOfDay.setUTCHours(23, 59, 59, 999);
 
     // Find orders placed on the similar date
+    console.log(startOfDay, endOfDay);
     const orders = await Order.find({
       createdAt: {
         $gte: startOfDay,
         $lte: endOfDay,
       },
+      venue: venue,
     });
     if (orders) res.status(200).json(orders);
   } catch (error) {
@@ -213,10 +193,154 @@ export const getOrders = async (req, res) => {
 };
 
 export const getAllOrdersForAdmin = async (req, res) => {
+  const { venue } = req.params;
+  console.log(venue);
   try {
-    const orders = await Order.find();
+    const orders = await Order.find({ venue });
     res.status(200).json(orders);
   } catch (er) {
     res.status(500).json({ message: er });
+  }
+};
+
+// Getting logged in User all Orders
+// Route GET /api/orders/myorders
+// Access only for user
+export const getMyOrders = async (req, res) => {
+  const { venue } = req.params;
+  const { phoneNumber } = req.body;
+  const orders = await Order.find({ phoneNumber: phoneNumber, venue: venue });
+  if (!orders || orders.length === 0) {
+    res.status(400).json({ error: "No Order" });
+    return;
+  }
+  res.status(200).json(orders);
+};
+
+// Getting Loggedin User Specific Order
+// Route GET /api/orders/:id
+// access User
+export const getOrderById = async (req, res) => {
+  const { venue, orderId } = req.params;
+  const order = await Order.findOne({ venue: venue, orderId: orderId });
+  // .populate(
+  //   "user",
+  //   "name mobileNumber"
+  // ); use this once Login Functionality is Done
+  if (order) {
+    res.status(200).json(order);
+  } else {
+    res.status(404).json({ error: "Order Not Found" });
+  }
+};
+
+// Updating Order (info Like Amount Paid)
+// Route PUT /api/Orders/:id/pay
+// acess Admin or chef
+export const updateOrderToPaid = async (req, res) => {
+  const { venue, orderId } = req.params;
+  const order = await Order.findOne({ venue: venue, orderId: orderId });
+  if (order) {
+    order.isPaid = true;
+    order.paidAt = Date.now();
+    const updatedOrder = await order.save();
+    res.status(200).json(updatedOrder);
+  } else {
+    res.status(404);
+  }
+};
+
+// Updating Order to Delivered
+// PUT /api/orders/:id/deliver
+// Access to Admin or Chef
+export const updateOrderToDelivered = async (req, res) => {
+  const { venue, orderId } = req.params;
+  const order = await Order.findOne({ venue: venue, orderId: orderId });
+  if (order) {
+    order.isDelivered = true;
+    order.deliveredAt = Date.now();
+    const updatedOrder = await order.save();
+
+    res.status(200).json(updatedOrder);
+  } else {
+    res.status(404);
+  }
+};
+
+// Update Order to Preparing
+// Route post /api/order
+// Access admin or chef
+export const updateOrderToPreparing = async (req, res) => {
+  try {
+    const { venue, orderId } = req.params;
+    const updatedOrder = await Order.findOneAndUpdate(
+      { orderId: orderId, venue: venue },
+      { orderStatus: "preparing" },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(updatedOrder);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const Delivered = async (req, res) => {
+  try {
+    const { venue, orderId } = req.params;
+    const updatedOrder = await Order.findOneAndUpdate(
+      { orderId: orderId, venue: venue },
+      { orderStatus: "delivered" },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(updatedOrder);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const ItemsQty = async (req, res) => {
+  try {
+    const { venue } = req.params;
+    const preparingOrders = await Order.find({
+      orderStatus: "preparing",
+      venue: venue,
+    });
+    console.log(preparingOrders);
+    const itemMap = new Map(); // Map to store item names and their quantities
+
+    preparingOrders.forEach((order) => {
+      order.orderItems.forEach((item) => {
+        const itemName = item.item;
+        const itemQty = item.qty;
+
+        if (itemMap.has(itemName)) {
+          itemMap.set(itemName, itemMap.get(itemName) + itemQty);
+        } else {
+          itemMap.set(itemName, itemQty);
+        }
+      });
+    });
+
+    const distinctItemsWithQty = Array.from(itemMap.entries()).map(
+      ([item, qty]) => ({
+        item,
+        qty,
+      })
+    );
+
+    res.json(distinctItemsWithQty);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
