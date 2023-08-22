@@ -15,16 +15,17 @@ const app = express();
 app.use(morgan("dev")); // this logs the route that we hit
 app.use(cors());
 app.use(compression());
+
 // Connection with Database using LocalHost -- Lokesh
 
-const url = 'mongodb://localhost/FS2';
+// const url = 'mongodb://localhost/FS2';
 
-mongoose.connect(url, { useNewUrlParser: true });
-const con = mongoose.connection;
+// mongoose.connect(url, { useNewUrlParser: true });
+// const con = mongoose.connection;
 
-con.on('open', () => {
-  console.log('connected...');
-});
+// // con.on('open', () => {
+// //   console.log('connected...');
+// // });
 
 app.use(express.json());
 app.use("/food", productRoutes);
@@ -40,15 +41,15 @@ app.listen(9000, () => {
 });
 
 // Connection with Database using MongoAtlas -- Naveen
-// mongoose
-//   .connect(process.env.MONGO_URI)
-//   .then(() => {
-//     app.listen(process.env.PORT, () => {
-//       console.log(
-//         `Server Started at PORT - ${process.env.PORT}, Connection to Database Done`
-//       );
-//     });
-//   })
-//   .catch((error) => {
-//     console.log(`Error Connecting to Database : ${error}`);
-//   });
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    app.listen(process.env.PORT, () => {
+      console.log(
+        `Server Started at PORT - ${process.env.PORT}, Connection to Database Done`
+      );
+    });
+  })
+  .catch((error) => {
+    console.log(`Error Connecting to Database : ${error}`);
+  });
