@@ -36,9 +36,9 @@ app.use(sseRoutes);
 const __dirname = path.resolve();
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 
-app.listen(9000, () => {
-  console.log("Server started");
-});
+// app.listen(9000, () => {
+//   console.log("Server started");
+// });
 
 // Connection with Database using MongoAtlas -- Naveen
 mongoose

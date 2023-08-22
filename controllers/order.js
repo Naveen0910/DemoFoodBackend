@@ -77,7 +77,6 @@ import { sse } from "../routes/sseRoute.js";
 //   }
 // };
 
-
 export const addOrderItems = async (req, res) => {
   const { venue } = req.params;
   const { orderItems, totalPrice, phoneNumber } = req.body;
@@ -109,26 +108,30 @@ export const addOrderItems = async (req, res) => {
 
     for (const orderItem of orderItems) {
       const { productId, qty } = orderItem;
-      console.log(productId, qty)
+      console.log(productId, qty);
       const menuEntry = await Menu.findOne({ productId: productId }); // Assuming you have a Menu model
 
       if (!menuEntry) {
         canPlaceOrder = false;
-        res.status(400).json({ error: `Product with productId ${productId} not found in menu` });
+        res.status(400).json({
+          error: `Product with productId ${productId} not found in menu`,
+        });
         break;
       }
 
       if (menuEntry.plates < qty) {
         canPlaceOrder = false;
-        res.status(400).json({ error: `Not enough plates available for product ${productId}` });
+        res.status(400).json({
+          error: `Not enough plates available for product ${productId}`,
+        });
         break;
       }
 
       // Update the plates value in the menu collection
-    //   await Menu.updateOne(
-    //     { productId },
-    //     { $inc: { plates: -qty } }
-    //   );
+      //   await Menu.updateOne(
+      //     { productId },
+      //     { $inc: { plates: -qty } }
+      //   );
 
       updatedOrderItems.push({
         ...orderItem,
@@ -137,14 +140,10 @@ export const addOrderItems = async (req, res) => {
     }
 
     if (canPlaceOrder) {
-
       for (const updatedOrderItem of updatedOrderItems) {
         const { productId, qty } = updatedOrderItem;
-        
-        await Menu.updateOne(
-          { productId },
-          { $inc: { plates: -qty } }
-        );
+
+        await Menu.updateOne({ productId }, { $inc: { plates: -qty } });
       }
       const order = new Order({
         orderItems: orderItems.map((x) => ({
@@ -158,12 +157,16 @@ export const addOrderItems = async (req, res) => {
         venue,
       });
       // Save the order to the database
-    await order.save();
-    res.status(201).json({ message: 'Order placed successfully', data: order });
+      await order.save();
+      sse.send(order, "newOrder");
+      res
+        .status(201)
+        .json({ message: "Order placed successfully", data: order });
     }
-
   } catch (error) {
-    res.status(500).json({ error: 'An error occurred while processing the order' + error });
+    res
+      .status(500)
+      .json({ error: "An error occurred while processing the order" + error });
   }
 };
 
@@ -372,7 +375,7 @@ export const updateOrderToPreparing = async (req, res) => {
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
-
+    sse.send(updatedOrder, "preparingOrder");
     res.json(updatedOrder);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -391,7 +394,7 @@ export const Delivered = async (req, res) => {
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
-
+    sse.send(updatedOrder, "deliveredOrder");
     res.json(updatedOrder);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -401,6 +404,7 @@ export const Delivered = async (req, res) => {
 export const ItemsQty = async (req, res) => {
   try {
     const { venue } = req.params;
+    console.log(venue);
     const preparingOrders = await Order.find({
       orderStatus: "preparing",
       venue: venue,

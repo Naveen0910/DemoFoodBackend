@@ -178,7 +178,7 @@ export const addMenu = async (req, res) => {
         // Product already exists in the menu, update its plates
         await Menu.updateOne(
           { productId: processedProductId },
-          { $set: { plates: plates } }
+          { $set: { plates: parseInt(plates) } }
         );
       } else {
         // Product doesn't exist in the menu, try to find it in Products
