@@ -43,7 +43,7 @@ const menuSchema = new mongoose.Schema(
       required: true,
     },
     plates: {
-      type: String,
+      type: Number,
       required: true,
     },
   },

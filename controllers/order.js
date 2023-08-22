@@ -26,20 +26,71 @@ import { sse } from "../routes/sseRoute.js";
 //   }
 // };
 
+// export const addOrderItems = async (req, res) => {
+//   const { venue } = req.params;
+//   const { orderItems, totalPrice, phoneNumber } = req.body;
+//   console.log(orderItems);
+//   if (!orderItems || orderItems.length === 0) {
+//     res.status(400).json({ error: "No Order Items" });
+//     return;
+//   }
+//   try {
+//     // Get the current date and format it as "dd-MM-yyyy"
+//     const currentDate = new Date();
+//     const formattedDate = format(currentDate, "dd-MM-yyyy");
+
+//     // Get the count of orders for the current date
+//     const getOrderCountForDateAndVenue = async (date, venue) => {
+//       const orderCount = await Order.countDocuments({
+//         venue: venue,
+//         createdAt: {
+//           $gte: new Date(date.setHours(0, 0, 0, 0)),
+//           $lt: new Date(date.setHours(23, 59, 59, 999)),
+//         },
+//       });
+//       return orderCount;
+//     };
+//     const orderCount = await getOrderCountForDateAndVenue(currentDate, venue);
+
+//     // Generate the orderId based on the current date and orderCount
+//     const orderId = `${formattedDate}_${venue}_order${orderCount + 1}`;
+
+//     const order = new Order({
+//       orderItems: orderItems.map((x) => ({
+//         ...x,
+//         product: x._id,
+//         _id: undefined,
+//       })),
+//       totalPrice,
+//       orderId,
+//       phoneNumber,
+//       venue,
+//     });
+
+//     const createdOrder = await order.save();
+//     console.log(createdOrder);
+//     sse.send(createdOrder, "newOrder");
+//     res.status(201).json(createdOrder);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+
 export const addOrderItems = async (req, res) => {
   const { venue } = req.params;
   const { orderItems, totalPrice, phoneNumber } = req.body;
-  console.log(orderItems);
+
   if (!orderItems || orderItems.length === 0) {
     res.status(400).json({ error: "No Order Items" });
     return;
   }
+  let canPlaceOrder = true;
   try {
-    // Get the current date and format it as "dd-MM-yyyy"
     const currentDate = new Date();
     const formattedDate = format(currentDate, "dd-MM-yyyy");
 
-    // Get the count of orders for the current date
     const getOrderCountForDateAndVenue = async (date, venue) => {
       const orderCount = await Order.countDocuments({
         venue: venue,
@@ -50,30 +101,69 @@ export const addOrderItems = async (req, res) => {
       });
       return orderCount;
     };
-    const orderCount = await getOrderCountForDateAndVenue(currentDate, venue);
 
-    // Generate the orderId based on the current date and orderCount
+    const orderCount = await getOrderCountForDateAndVenue(currentDate, venue);
     const orderId = `${formattedDate}_${venue}_order${orderCount + 1}`;
 
-    const order = new Order({
-      orderItems: orderItems.map((x) => ({
-        ...x,
-        product: x._id,
-        _id: undefined,
-      })),
-      totalPrice,
-      orderId,
-      phoneNumber,
-      venue,
-    });
+    const updatedOrderItems = [];
 
-    const createdOrder = await order.save();
-    console.log(createdOrder);
-    sse.send(createdOrder, "newOrder");
-    res.status(201).json(createdOrder);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: err.message });
+    for (const orderItem of orderItems) {
+      const { productId, qty } = orderItem;
+      console.log(productId, qty)
+      const menuEntry = await Menu.findOne({ productId: productId }); // Assuming you have a Menu model
+
+      if (!menuEntry) {
+        canPlaceOrder = false;
+        res.status(400).json({ error: `Product with productId ${productId} not found in menu` });
+        break;
+      }
+
+      if (menuEntry.plates < qty) {
+        canPlaceOrder = false;
+        res.status(400).json({ error: `Not enough plates available for product ${productId}` });
+        break;
+      }
+
+      // Update the plates value in the menu collection
+    //   await Menu.updateOne(
+    //     { productId },
+    //     { $inc: { plates: -qty } }
+    //   );
+
+      updatedOrderItems.push({
+        ...orderItem,
+        product: productId,
+      });
+    }
+
+    if (canPlaceOrder) {
+
+      for (const updatedOrderItem of updatedOrderItems) {
+        const { productId, qty } = updatedOrderItem;
+        
+        await Menu.updateOne(
+          { productId },
+          { $inc: { plates: -qty } }
+        );
+      }
+      const order = new Order({
+        orderItems: orderItems.map((x) => ({
+          ...x,
+          product: x._id,
+          _id: undefined,
+        })),
+        totalPrice,
+        phoneNumber,
+        orderId,
+        venue,
+      });
+      // Save the order to the database
+    await order.save();
+    res.status(201).json({ message: 'Order placed successfully', data: order });
+    }
+
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while processing the order' + error });
   }
 };
 
