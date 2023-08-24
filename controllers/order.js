@@ -79,7 +79,7 @@ import { sse } from "../routes/sseRoute.js";
 
 export const addOrderItems = async (req, res) => {
   const { venue } = req.params;
-  const { orderItems, totalPrice, phoneNumber } = req.body;
+  const { orderItems, totalPrice, phoneNumber, cookingInstructions } = req.body;
 
   if (!orderItems || orderItems.length === 0) {
     res.status(400).json({ error: "No Order Items" });
@@ -153,6 +153,7 @@ export const addOrderItems = async (req, res) => {
         })),
         totalPrice,
         phoneNumber,
+        cookingInstructions,
         orderId,
         venue,
       });

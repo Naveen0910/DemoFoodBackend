@@ -4,17 +4,22 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import productRoutes from "./routes/products.js";
 import orderRoutes from "./routes/order.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import sseRoutes from "./routes/sseRoute.js";
 import compression from "compression";
+import authRoutes from "./routes/auth.js";
 
 dotenv.config(); // To load env variables from .env file
 const app = express();
 app.use(morgan("dev")); // this logs the route that we hit
 app.use(cors());
 app.use(compression());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Connection with Database using LocalHost -- Lokesh
 
@@ -31,6 +36,7 @@ app.use(express.json());
 app.use("/food", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/auth", authRoutes);
 app.use(sseRoutes);
 
 const __dirname = path.resolve();

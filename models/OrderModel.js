@@ -57,6 +57,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "justPlaced",
     },
+    cookingInstructions: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );
