@@ -19,6 +19,7 @@ export const protect = async (req, res, next) => {
 };
 
 export const adminOrUser = async (req, res, next) => {
+  console.log(req.user);
   const user = await User.findById(req.user.id);
 
   if (user || user.isAdmin === true) {

@@ -42,15 +42,21 @@ router.patch(
   [protect, isChef, isAdmin],
   updateProduct
 );
-router.delete("/:venue/products/:productId", [isAdmin, isChef], deleteProduct);
+router.delete(
+  "/:venue/products/:productId",
+  protect,
+  adminOrChef,
+  deleteProduct
+);
 router.get("/products/:fileName", getProductImage);
 //For Menu list
-router.post("/:venue/products/addtomenu", [isChef, isAdmin], addMenu);
+router.post("/:venue/products/addtomenu", protect, adminOrChef, addMenu);
 router.get("/:venue/menu", getMenu);
-router.delete("/:venue/menu/:productId", [isChef, isAdmin], deleteMenuItem);
+router.delete("/:venue/menu/:productId", protect, adminOrChef, deleteMenuItem);
 router.delete(
   "/:venue/menu/delete/AllItems",
-  [isChef, isAdmin],
+  protect,
+  adminOrChef,
   deleteAllMenuItem
 );
 //Reviews

@@ -79,11 +79,21 @@ import { sse } from "../routes/sseRoute.js";
 
 export const addOrderItems = async (req, res) => {
   const { venue } = req.params;
-  const { orderItems, totalPrice, phoneNumber, cookingInstructions } = req.body;
+  let { orderItems } = req.body;
+  const { totalPrice, phoneNumber, cookingInstructions } = req.body;
   if (!orderItems || orderItems.length === 0) {
     res.status(400).json({ error: "No Order Items" });
     return;
   }
+  orderItems = orderItems.map((orderItem) => {
+    const { productId } = orderItem;
+
+    if (!productId.endsWith(`_${venue}`)) {
+      orderItem.productId = `${productId}_${venue}`;
+    }
+
+    return orderItem;
+  });
   let canPlaceOrder = true;
   try {
     const currentDate = new Date();
@@ -404,7 +414,6 @@ export const Delivered = async (req, res) => {
 export const ItemsQty = async (req, res) => {
   try {
     const { venue } = req.params;
-    console.log(venue);
     const preparingOrders = await Order.find({
       orderStatus: "preparing",
       venue: venue,
