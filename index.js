@@ -32,6 +32,10 @@ app.use(cookieParser());
 // //   console.log('connected...');
 // // });
 
+app.get("/ping", (req, res) => {
+  res.json({ "msg": "pong" })
+})
+
 app.use(express.json());
 app.use("/food", productRoutes);
 app.use("/api/orders", orderRoutes);
