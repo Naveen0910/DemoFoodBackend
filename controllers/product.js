@@ -203,7 +203,7 @@ export const addMenu = async (req, res) => {
     if (newMenuItems.length > 0) {
       await Menu.insertMany(newMenuItems);
     }
-
+    sse.send(newMenuItems, "menuCreation");
     res.status(200).json({ message: "Menu items added/updated successfully" });
   } catch (error) {
     console.error(error);

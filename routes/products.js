@@ -39,7 +39,8 @@ router.get("/:venue/products/:productId", getProduct);
 router.post("/:venue/products", protect, isAdmin, addProduct);
 router.patch(
   "/:venue/products/:productId",
-  [protect, isChef, isAdmin],
+  protect,
+  adminOrChef,
   updateProduct
 );
 router.delete(
@@ -54,7 +55,7 @@ router.post("/:venue/products/addtomenu", protect, adminOrChef, addMenu);
 router.get("/:venue/menu", getMenu);
 router.delete("/:venue/menu/:productId", protect, adminOrChef, deleteMenuItem);
 router.delete(
-  "/:venue/menu/delete/AllItems",
+  "/:venue/menu/delete/allitems",
   protect,
   adminOrChef,
   deleteAllMenuItem
