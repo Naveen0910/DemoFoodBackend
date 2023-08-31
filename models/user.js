@@ -12,8 +12,9 @@ const userSchema = new Schema(
       type: String,
       trim: true,
       required: true,
-      unique: true,
+      // unique: true,
     },
+    OTP : { type: String },
     phoneNumber: {
       type: String,
       required: true,

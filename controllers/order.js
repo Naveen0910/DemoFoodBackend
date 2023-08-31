@@ -2,6 +2,7 @@ import Order from "../models/OrderModel.js";
 import Menu from "../models/menu.js";
 import { format, startOfDay, parseISO, endOfDay } from "date-fns";
 import { sse } from "../routes/sseRoute.js";
+import { sendMessage } from "./auth.js";
 
 // Create new Order
 // Route POST /api/orders
@@ -76,6 +77,14 @@ import { sse } from "../routes/sseRoute.js";
 //     res.status(500).json({ message: err.message });
 //   }
 // };
+
+const extractOrderNumber = (orderId) => {
+  const parts = orderId.split("_");
+  if (parts.length > 0) {
+    return parts[parts.length - 1]; // Extract the last part of the split string
+  }
+  return orderId; // If splitting doesn't work, return the original orderId
+};
 
 export const addOrderItems = async (req, res) => {
   const { venue } = req.params;
@@ -166,6 +175,17 @@ export const addOrderItems = async (req, res) => {
         orderId,
         venue,
       });
+
+
+      // send message to the user
+      // const orderNumber = extractOrderNumber(orderId);
+      // const message = `Order placed successfully! Your order Id is ${orderNumber}.`;
+      // try {
+      //   await sendMessage(phoneNumber, message);
+      // } catch (error) {
+      //   return res.status(500).json({ error: "Error sending Message" });
+      // }
+
       // Save the order to the database
       await order.save();
       sse.send(order, "newOrder");
