@@ -200,80 +200,6 @@ export const addOrderItems = async (req, res) => {
   }
 };
 
-// export const addOrderItems = async (req, res) => {
-//   const { venue } = req.params;
-//   const { orderItems, totalPrice, phoneNumber } = req.body;
-//   console.log(orderItems, totalPrice);
-//   if (!orderItems || orderItems.length === 0) {
-//     res.status(400).json({ error: "No Order Items" });
-//     return;
-//   }
-
-//   try {
-//     // Get the current date and format it as "dd-MM-yyyy"
-//     const currentDate = new Date();
-//     const formattedDate = format(currentDate, "dd-MM-yyyy");
-
-//     // Get the count of orders for the current date and venue
-//     const getOrderCountForDateAndVenue = async (date, venue) => {
-//       const orderCount = await Order.countDocuments({
-//         venue: venue,
-//         createdAt: {
-//           $gte: new Date(date.setHours(0, 0, 0, 0)),
-//           $lt: new Date(date.setHours(23, 59, 59, 999)),
-//         },
-//       });
-//       return orderCount;
-//     };
-//     const orderCount = await getOrderCountForDateAndVenue(currentDate, venue);
-
-//     // Generate the orderId based on the current date and orderCount
-//     const orderId = `${formattedDate}_${venue}_order${orderCount + 1}`;
-
-//     // Fetch menu items based on the product IDs in the order
-//     const menuItems = await Menu.find({
-//       productId: { $in: orderItems.map((item) => item.productId) },
-//       venue: venue,
-//     });
-
-//     if (!menuItems || menuItems.length === 0) {
-//       res.status(400).json({ error: "No Items Menu" });
-//       return;
-//     }
-//     // Populate the orderItems array with menu item details
-//     const populatedOrderItems = orderItems.map((item) => {
-//       const menuItem = menuItems.find(
-//         (menuItem) => menuItem.productId === item.productId
-//       );
-//       return {
-//         item: menuItem.item,
-//         qty: item.qty,
-//         price: menuItem.price,
-//         photo: menuItem.photo,
-//         productId: item.productId,
-//       };
-//     });
-
-//     const totalPrice = populatedOrderItems.reduce((total, item) => {
-//       return total + item.qty * item.price;
-//     }, 0);
-
-//     const order = new Order({
-//       orderItems: populatedOrderItems,
-//       totalPrice,
-//       orderId,
-//       phoneNumber,
-//       venue,
-//     });
-
-//     const createdOrder = await order.save();
-//     console.log(createdOrder);
-//     sse.send(createdOrder, "newOrder");
-//     res.status(201).json(createdOrder);
-//   } catch (error) {
-//     res.status(500).json({ error: "Internal Server Error " + error });
-//   }
-// };
 
 // Updatind Order To Delivered
 // Route GET /api/orders
@@ -396,6 +322,7 @@ export const updateOrderToDelivered = async (req, res) => {
 export const updateOrderToPreparing = async (req, res) => {
   try {
     const { venue, orderId } = req.params;
+    // const { phoneNumber } = req.body;
     const updatedOrder = await Order.findOneAndUpdate(
       { orderId: orderId, venue: venue },
       { orderStatus: "preparing" },
@@ -406,6 +333,16 @@ export const updateOrderToPreparing = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
     sse.send(updatedOrder, "preparingOrder");
+
+    // send message to the user
+    // const orderNumber = extractOrderNumber(orderId);
+    // const message = `Order confirmed!\nOrderID: ${orderNumber}\nStarted preparing, Thank you.`;
+    // try {
+    //   await sendMessage(phoneNumber, message);
+    // } catch (error) {
+    //   return res.status(500).json({ error: "Error sending Message" });
+    // }
+
     res.json(updatedOrder);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -415,6 +352,7 @@ export const updateOrderToPreparing = async (req, res) => {
 export const Delivered = async (req, res) => {
   try {
     const { venue, orderId } = req.params;
+    // const { phoneNumber } = req.body;
     const updatedOrder = await Order.findOneAndUpdate(
       { orderId: orderId, venue: venue },
       { orderStatus: "delivered" },
@@ -425,6 +363,16 @@ export const Delivered = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
     sse.send(updatedOrder, "deliveredOrder");
+
+    // send message to the user
+    // const orderNumber = extractOrderNumber(orderId);
+    // const message = `OrderID: ${orderNumber}\nYour order is ready for pickup. Please collect. Thank you..`;
+    // try {
+    //   await sendMessage(phoneNumber, message);
+    // } catch (error) {
+    //   return res.status(500).json({ error: "Error sending Message" });
+    // }
+
     res.json(updatedOrder);
   } catch (err) {
     res.status(500).json({ message: err.message });
