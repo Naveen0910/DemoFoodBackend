@@ -176,7 +176,6 @@ export const addOrderItems = async (req, res) => {
         venue,
       });
 
-
       // send message to the user
       // const orderNumber = extractOrderNumber(orderId);
       // const message = `Order placed successfully! Your order Id is ${orderNumber}.`;
@@ -199,7 +198,6 @@ export const addOrderItems = async (req, res) => {
       .json({ error: "An error occurred while processing the order" + error });
   }
 };
-
 
 // Updatind Order To Delivered
 // Route GET /api/orders
@@ -322,7 +320,8 @@ export const updateOrderToDelivered = async (req, res) => {
 export const updateOrderToPreparing = async (req, res) => {
   try {
     const { venue, orderId } = req.params;
-    // const { phoneNumber } = req.body;
+    const orderDetails = await Order.find({ orderId });
+    const phoneNumber = orderDetails[0].phoneNumber;
     const updatedOrder = await Order.findOneAndUpdate(
       { orderId: orderId, venue: venue },
       { orderStatus: "preparing" },
@@ -335,13 +334,13 @@ export const updateOrderToPreparing = async (req, res) => {
     sse.send(updatedOrder, "preparingOrder");
 
     // send message to the user
-    // const orderNumber = extractOrderNumber(orderId);
-    // const message = `Order confirmed!\nOrderID: ${orderNumber}\nStarted preparing, Thank you.`;
-    // try {
-    //   await sendMessage(phoneNumber, message);
-    // } catch (error) {
-    //   return res.status(500).json({ error: "Error sending Message" });
-    // }
+    const orderNumber = extractOrderNumber(orderId);
+    const message = `Order confirmed!\nOrderID: ${orderNumber}\nStarted preparing, Thank you.`;
+    try {
+      await sendMessage(phoneNumber, message);
+    } catch (error) {
+      return res.status(500).json({ error: "Error sending Message" });
+    }
 
     res.json(updatedOrder);
   } catch (err) {
@@ -352,7 +351,8 @@ export const updateOrderToPreparing = async (req, res) => {
 export const Delivered = async (req, res) => {
   try {
     const { venue, orderId } = req.params;
-    // const { phoneNumber } = req.body;
+    const orderDetails = await Order.find({ orderId });
+    const phoneNumber = orderDetails[0].phoneNumber;
     const updatedOrder = await Order.findOneAndUpdate(
       { orderId: orderId, venue: venue },
       { orderStatus: "delivered" },
@@ -365,13 +365,13 @@ export const Delivered = async (req, res) => {
     sse.send(updatedOrder, "deliveredOrder");
 
     // send message to the user
-    // const orderNumber = extractOrderNumber(orderId);
-    // const message = `OrderID: ${orderNumber}\nYour order is ready for pickup. Please collect. Thank you..`;
-    // try {
-    //   await sendMessage(phoneNumber, message);
-    // } catch (error) {
-    //   return res.status(500).json({ error: "Error sending Message" });
-    // }
+    const orderNumber = extractOrderNumber(orderId);
+    const message = `OrderID: ${orderNumber}\nYour order is ready for pickup. Please collect. Thank you..`;
+    try {
+      await sendMessage(phoneNumber, message);
+    } catch (error) {
+      return res.status(500).json({ error: "Error sending Message" });
+    }
 
     res.json(updatedOrder);
   } catch (err) {
