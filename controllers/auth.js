@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import User from "../models/user.js";
 import generateToken from "../utils/generateToken.js";
-import fast2sms from 'fast-two-sms';
+import fast2sms from "fast-two-sms";
 
 dotenv.config();
 
@@ -33,15 +33,22 @@ export const sendMessage = async (phoneNumber, message) => {
 export const createUser = async (req, res) => {
   try {
     const { userName, phoneNumber, emailId } = req.body;
-    const existingUser = await User.findOne({ phoneNumber });
 
+    const existingUser = await User.findOne({ phoneNumber });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     // Generate OTP
-    const otp = generateOTP(6); // Change 6 to the desired OTP length
-    const message = `Your OTP is ${otp}. Do not share it with anyone.`;
+    const OTP = generateOTP(6); // Change 6 to the desired OTP length
+    const message = `Your OTP is ${OTP}. Do not share it with anyone.`;
+
+    const user = await User.create({
+      userName,
+      emailId,
+      phoneNumber,
+      OTP: OTP, // Store OTP in the user schema
+    });
 
     // Send OTP via SMS
     try {
@@ -50,21 +57,30 @@ export const createUser = async (req, res) => {
       return res.status(500).json({ error: "Error sending OTP" });
     }
 
-    const user = await User.create({
-      userName,
-      emailId,
-      phoneNumber,
-      OTP: otp, // Store OTP in the user schema
-    });
-
     if (user) {
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-      res.status(201).json({ userInfo: user, token });
+      return res.status(200).json(user);
     } else {
-      res.status(400).json({ message: "Invalid User Data" });
+      return res.status(400).json({ message: "Invalid user details" });
     }
   } catch (err) {
     res.status(500).json({ error: err });
+  }
+};
+
+export const newUserMobileVerification = async (req, res) => {
+  const { otp, phoneNumber } = req.body;
+  const user = await User.findOne({ phoneNumber });
+  console.log(user.OTP);
+  if (user) {
+    const otpVerified = verifyOtp(otp, user.OTP);
+    if (otpVerified) {
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+      return res.status(201).json({ userInfo: user, token });
+    } else {
+      return res.status(401).json({ message: "Invalid Otp" });
+    }
+  } else {
+    return res.status(400).json({ message: "Invalid User Data" });
   }
 };
 
@@ -99,7 +115,6 @@ export const verifyMobileNumber = async (req, res) => {
 
 export const verifyOtp = (enteredOtp, storedOtp) => {
   // return enteredOtp === storedOtp;
-  console.log("loki",enteredOtp,storedOtp)
   return String(enteredOtp) === String(storedOtp);
 };
 
@@ -122,7 +137,9 @@ export const login = async (req, res) => {
 
     return res.status(401).json({ message: "Invalid OTP" });
   } catch (error) {
-    return res.status(500).json({ error: error.message || "Internal server error" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Internal server error" });
   }
 };
 
