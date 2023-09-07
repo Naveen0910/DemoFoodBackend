@@ -1,17 +1,7 @@
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
-const reviewSchema = mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    comment: { type: String, required: true },
-    rating: { type: Number, required: true },
-    /* Need to add user ref */
-  },
-  { timestamps: true }
-);
-
-const productSchema = new mongoose.Schema(
+const menuSchema = new mongoose.Schema(
   {
     productId: {
       type: String,
@@ -28,17 +18,6 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       maxlength: 2000,
-    },
-    reviews: [reviewSchema],
-    rating: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    numReviews: {
-      type: Number,
-      required: true,
-      default: 0,
     },
     price: {
       type: Number,
@@ -59,11 +38,17 @@ const productSchema = new mongoose.Schema(
     photo: {
       type: String,
     },
-    imageUrl: {
+    venue: {
       type: String,
+      required: true,
+    },
+    plates: {
+      type: Number,
+      required: true,
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Product", productSchema);
+// export default menuSchema;
+export default mongoose.model("Menu", menuSchema);

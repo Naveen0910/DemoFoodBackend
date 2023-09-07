@@ -3,26 +3,36 @@ const { Schema } = mongoose;
 
 const userSchema = new Schema(
   {
-    name: {
+    userName: {
       type: String,
       trim: true,
       required: true,
     },
-    email: {
+    emailId: {
       type: String,
       trim: true,
       required: true,
-      unique: true,
+      // unique: true,
     },
-    password: {
+    OTP : { type: String },
+    phoneNumber: {
       type: String,
       required: true,
-      min: 6,
-      max: 64,
+      validate: {
+        validator: function (v) {
+          return /^\d{10}$/.test(v); // Check if it's a 10-digit number
+        },
+        message: (props) =>
+          `${props.value} is not a valid 10-digit phone number!`,
+      },
     },
-    role: {
-      type: Number,
-      default: 0,
+    isChef: {
+      type: Boolean,
+      default: false,
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
