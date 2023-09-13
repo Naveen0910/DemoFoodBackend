@@ -2,7 +2,7 @@ import Order from "../models/OrderModel.js";
 import Menu from "../models/menu.js";
 import { format, startOfDay, parseISO, endOfDay } from "date-fns";
 import { sse } from "../routes/sseRoute.js";
-import { sendMessage } from "./auth.js";
+// import { sendMessage } from "./auth.js";
 
 // Create new Order
 // Route POST /api/orders
@@ -337,7 +337,7 @@ export const updateOrderToPreparing = async (req, res) => {
     const orderNumber = extractOrderNumber(orderId);
     const message = `Order confirmed!\nOrderID: ${orderNumber}\nStarted preparing, Thank you.`;
     try {
-      await sendMessage(phoneNumber, message);
+      // await sendMessage(phoneNumber, message);
     } catch (error) {
       return res.status(500).json({ error: "Error sending Message" });
     }
@@ -368,7 +368,7 @@ export const Delivered = async (req, res) => {
     const orderNumber = extractOrderNumber(orderId);
     const message = `OrderID: ${orderNumber}\nYour order is ready for pickup. Please collect. Thank you..`;
     try {
-      await sendMessage(phoneNumber, message);
+      // await sendMessage(phoneNumber, message);
     } catch (error) {
       return res.status(500).json({ error: "Error sending Message" });
     }

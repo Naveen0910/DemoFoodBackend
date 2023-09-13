@@ -2,7 +2,7 @@ import express from "express";
 import {
   createUser,
   login,
-  newUserMobileVerification,
+  // newUserMobileVerification,
   verifyMobileNumber,
 } from "../controllers/auth.js";
 
@@ -13,5 +13,5 @@ const router = express.Router();
 router.post("/verifyNumber", verifyMobileNumber);
 router.post("/register", createUser);
 router.post("/login", login);
-router.post("/register/verifyotp", newUserMobileVerification);
+// router.post("/register/verifyotp", newUserMobileVerification);
 export default router;
